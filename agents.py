@@ -17,14 +17,14 @@ ORANGE = ( 255, 127, 0)
 GREEN = ( 0, 255, 0)
 OTHER = ( 0, 255, 255)
 
-SCREEN_WIDTH = 400
-SCREEN_HEIGHT = 400
-agent_size = 4.0
-be = 1.6
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 800
+agent_size = 8.0
+be = 1.65
 iterations = 600
 
-tick = 30
-is_print_map = True
+tick = 60
+is_print_map = False
 use_int4 = False
 
 class Player(pygame.sprite.Sprite):
@@ -49,8 +49,6 @@ class Player(pygame.sprite.Sprite):
 			self.image.fill(WHITE)
 		else:
 			self.image.fill(RED)
-		
-		# Make our top-left corner the passed-in location.
 		self.rect = self.image.get_rect()
 		self.rect.x = x*size
 		self.rect.y = y*size
@@ -107,47 +105,52 @@ class Player(pygame.sprite.Sprite):
 			for j in range(ini_y,fin_y+1):
 				if(i != self.x or j != self.y):
 					ag = mapa[i][j]
-					#print "best",best,"score",ag.score
 					if best < ag.score:
 						best = ag.score
 						change = ag.cooperate
 					elif best == ag.score:
 						if not ag.cooperate:
 							change = ag.cooperate
-				
-		#if not self.cooperate:
-		#print self.x,self.y,ini_x,fin_x,ini_y,fin_y,best,change
+		return (best,change)
+		
+	def update_4(self):
+		best = self.score
+		change = None
+		if self.x > 0:
+			ag = mapa[self.x - 1][self.y]
+			if best < ag.score:
+				best = ag.score
+			change = ag.cooperate
+		if self.y > 0:
+			ag = mapa[self.x][self.y - 1]
+			if best < ag.score:
+				best = ag.score
+				change = ag.cooperate
+		if self.x < matrix_lines - 1:
+			ag = mapa[self.x + 1][self.y]
+			if best < ag.score:
+				best = ag.score
+				change = ag.cooperate
+		if self.y < matrix_cols - 1:
+			ag = mapa[self.x][self.y + 1]
+			if best < ag.score:
+				best = ag.score
+				change = ag.cooperate
 		return (best,change)
 	
 	def update(self):
 		best = self.score
 		change = None
-		#if self.x > 0:
-		#	ag = mapa[self.x - 1][self.y]
-		#	if best < ag.score:
-		#		best = ag.score
-		#		change = ag.cooperate
-		#if self.y > 0:
-		#	ag = mapa[self.x][self.y - 1]
-		#	if best < ag.score:
-		#		best = ag.score
-		#		change = ag.cooperate
-		#if self.x < matrix_lines - 1:
-		#	ag = mapa[self.x + 1][self.y]
-		#	if best < ag.score:
-		#		best = ag.score
-		#		change = ag.cooperate
-		#if self.y < matrix_cols - 1:
-		#	ag = mapa[self.x][self.y + 1]
-		#	if best < ag.score:
-		#		best = ag.score
-		#		change = ag.cooperate
-		best, change = self.update_8()
+		if use_int4:
+			best, change = self.update_4()
+		else:	
+			best, change = self.update_8()
 		if change != None and self.cooperate != change:
 			if self.cooperate and not change:
 				self.image.fill(ORANGE)
 			elif not self.cooperate and change:
 				self.image.fill(GREEN)
+			#self.n_cop = change
 			self.n_cop = change
 		else:
 			if self.cooperate:
@@ -183,20 +186,13 @@ def print_map():
 
 matrix_lines =  int(SCREEN_HEIGHT/agent_size)
 matrix_cols =  int(SCREEN_WIDTH/agent_size)
-# Call this function so the Pygame library can initialize itself
-pygame.init()
 
-# Create an 800x600 sized screen
+pygame.init()
 screen = pygame.display.set_mode([SCREEN_HEIGHT,SCREEN_WIDTH])
 
-# Set the title of the window
 pygame.display.set_caption('Test')
-
-# List to hold all the sprites
 all_sprite_list = pygame.sprite.Group()
 
-#mapa = [[ for x in xrange(SCREEN_WIDTH)] for x in xrange(SCREEN_HEIGHT)] 
-#mapa = numpy.zeros((SCREEN_WIDTH, SCREEN_HEIGHT))
 mapa = []
 
 for i in range(matrix_lines):
@@ -233,45 +229,21 @@ while not done:
 		pygame.display.flip()
 		
 		clock.tick(tick)
-		
-		#if is_print_map:
-		#	print_map()
-		
-		#for i in range(matrix_lines):
-		#	for j in range(matrix_cols):
-		#		if use_int4:
-		#			mapa[i][j].interact_4()
-		#		else:
-		#			mapa[i][j].interact_8()
-		#		if i > 1:
-		#			mapa[i-2][j].update()
-		
+
 		for i in range(matrix_lines):
 			for j in range(matrix_cols):
 				if use_int4:
 					mapa[i][j].interact_4()
 				else:
 					mapa[i][j].interact_8()
-		
-		#for i in range(matrix_lines - 2,matrix_lines):
-		#	for j in range(matrix_cols):
-		#		mapa[i][j].update()
-		
-		#if is_print_map:
-		#	print_map()
-			
-		for i in range(matrix_lines):
+				if i > 1:
+					mapa[i-2][j].update()
+
+		for i in range(matrix_lines - 2,matrix_lines):
 			for j in range(matrix_cols):
 				mapa[i][j].update()
-				
-		#if is_print_map:
-		#	print_map()
 		
 		for i in range(matrix_lines):
 			for j in range(matrix_cols):
 				mapa[i][j].next_gen()
-		
-		#if is_print_map:
-		#	print_map()
-		#print "###########################################################################\n"
 		it += 1
