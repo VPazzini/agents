@@ -1,9 +1,6 @@
 import pygame
 import random as r
-import numpy
 import time
-import math
-import sys
 
 """
 Global constants
@@ -19,11 +16,11 @@ OTHER = ( 0, 255, 255)
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 800
-agent_size = 8.0
+agent_size = 2.0
 be = 1.65
 iterations = 600
 
-tick = 60
+tick = 60000
 is_print_map = False
 use_int4 = False
 
@@ -103,6 +100,8 @@ class Player(pygame.sprite.Sprite):
 		change = None
 		for i in range(ini_x,fin_x+1):
 			for j in range(ini_y,fin_y+1):
+				if best == be*8:
+					break
 				if(i != self.x or j != self.y):
 					ag = mapa[i][j]
 					if best < ag.score:
@@ -150,7 +149,6 @@ class Player(pygame.sprite.Sprite):
 				self.image.fill(ORANGE)
 			elif not self.cooperate and change:
 				self.image.fill(GREEN)
-			#self.n_cop = change
 			self.n_cop = change
 		else:
 			if self.cooperate:
@@ -209,7 +207,7 @@ done = False
 
 mapa[matrix_lines/2-1][matrix_cols/2-1].cooperate = False
 
-initial_time = time.time()
+
 it = 0
 while not done:
 	
@@ -220,6 +218,8 @@ while not done:
 		#	if event.key == pygame.K_LEFT:
 
 	if it <= iterations:
+		initial_time = time.time()
+		
 		all_sprite_list.update()
 		
 		screen.fill(BLACK)
@@ -247,3 +247,4 @@ while not done:
 			for j in range(matrix_cols):
 				mapa[i][j].next_gen()
 		it += 1
+		print "iteration:",it,"time:",time.time()-initial_time
